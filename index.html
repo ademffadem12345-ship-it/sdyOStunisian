@@ -2,92 +2,78 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SDYOS</title>
-<style>
-body{margin:0;overflow:hidden;font-family:Segoe UI, sans-serif;background:#1e1e2f;}
-.desktop{width:100vw;height:100vh;position:relative;}
-.taskbar{position:absolute;bottom:0;width:100%;height:50px;background:rgba(20,20,20,0.7);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;padding:0 15px;color:white;}
-.start-btn{width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.3s;}
-.start-btn:hover{background:rgba(255,255,255,0.4);}
-.window{width:400px;height:300px;background:rgba(30,30,30,0.95);backdrop-filter:blur(10px);border-radius:12px;position:absolute;top:100px;left:200px;display:none;flex-direction:column;color:white;box-shadow:0 0 20px rgba(0,0,0,0.6);}
-.window-header{background:rgba(0,0,0,0.4);padding:8px;display:flex;justify-content:space-between;border-radius:12px 12px 0 0;cursor:move;}
-.close-btn{cursor:pointer;padding:0 10px;}
-.window-content{padding:10px;flex:1;color:white;font-family:monospace;}
-.icon{width:60px;text-align:center;color:white;cursor:pointer;margin:10px;display:inline-block;}
-.icon img{width:50px;height:50px;display:block;margin:auto;}
-input.cmd{width:100%;padding:5px;background:#222;color:#0f0;border:none;font-family:monospace;}
-.output{height:150px;overflow:auto;background:#111;padding:5px;color:#0f0;font-family:monospace;}
-</style>
+<title>SDYOS Advanced</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="desktop">
 
-<!-- Icons -->
-<div class="icon" onclick="openWindow('settings')">
-<img src="https://img.icons8.com/ios-filled/50/ffffff/settings.png"/>
-<div>Settings</div>
-</div>
-<div class="icon" onclick="openWindow('terminal')">
-<img src="https://img.icons8.com/ios-filled/50/ffffff/console.png"/>
-<div>Terminal</div>
+    <!-- Desktop Icons -->
+    <div class="icon" onclick="openWindow('terminal')">
+        <img src="icons/terminal.png">
+        <div>Terminal</div>
+    </div>
+
+    <div class="icon" onclick="openWindow('pythonIDE')">
+        <img src="icons/python.png">
+        <div>Python IDE</div>
+    </div>
+
+    <div class="icon" onclick="openWindow('settings')">
+        <img src="icons/settings.png">
+        <div>Settings</div>
+    </div>
+
+    <div class="icon" onclick="openWindow('explorer')">
+        <img src="icons/explorer.png">
+        <div>Explorer</div>
+    </div>
+
+    <!-- Windows -->
+    <div class="window" id="terminal">
+        <div class="window-header">Terminal <span class="close-btn" onclick="closeWindow('terminal')">X</span></div>
+        <div class="window-content">
+            <div class="output" id="terminalOutput"></div>
+            <input type="text" class="cmd" id="terminalInput" placeholder="Enter command...">
+        </div>
+    </div>
+
+    <div class="window" id="pythonIDE">
+        <div class="window-header">Python IDE <span class="close-btn" onclick="closeWindow('pythonIDE')">X</span></div>
+        <div class="window-content">
+            <textarea id="pythonCode" placeholder="Write Python code here..." style="width:100%;height:150px;background:#111;color:#0f0;"></textarea>
+            <button onclick="runPython()">Run</button>
+            <div class="output" id="pythonOutput"></div>
+        </div>
+    </div>
+
+    <div class="window" id="settings">
+        <div class="window-header">Settings <span class="close-btn" onclick="closeWindow('settings')">X</span></div>
+        <div class="window-content">
+            <p>Configure SDYOS settings here.</p>
+        </div>
+    </div>
+
+    <div class="window" id="explorer">
+        <div class="window-header">Explorer <span class="close-btn" onclick="closeWindow('explorer')">X</span></div>
+        <div class="window-content">
+            <ul id="fileList">
+                <li>file1.txt</li>
+                <li>script.py</li>
+                <li>folder1/</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="start-btn" onclick="alert('Start menu clicked!')">☰</div>
+        <div id="taskbarApps"></div>
+        <div id="clock"></div>
+    </div>
+
 </div>
 
-<!-- Windows -->
-<div class="window" id="settings">
-<div class="window-header">Settings <span class="close-btn" onclick="closeWindow('settings')">X</span></div>
-<div class="window-content">
-<p>Welcome to SDYOS Settings!</p>
-<p>Here you can configure your desktop.</p>
-</div>
-</div>
-
-<div class="window" id="terminal">
-<div class="window-header">Terminal <span class="close-btn" onclick="closeWindow('terminal')">X</span></div>
-<div class="window-content">
-<div class="output" id="output"></div>
-<input type="text" class="cmd" id="cmdInput" placeholder="Type command..."/>
-</div>
-</div>
-
-<!-- Taskbar -->
-<div class="taskbar">
-<div class="start-btn" onclick="alert('Start menu clicked!')">☰</div>
-<div id="clock"></div>
-</div>
-</div>
-
-<script>
-// Open/Close Windows
-function openWindow(id){document.getElementById(id).style.display='flex';}
-function closeWindow(id){document.getElementById(id).style.display='none';}
-
-// Clock
-function updateClock(){
-const now=new Date();
-const h=now.getHours().toString().padStart(2,'0');
-const m=now.getMinutes().toString().padStart(2,'0');
-const s=now.getSeconds().toString().padStart(2,'0');
-document.getElementById('clock').innerText=h+':'+m+':'+s;}
-setInterval(updateClock,1000); updateClock();
-
-// Drag Windows
-let dragItem=null, offsetX, offsetY;
-document.querySelectorAll('.window-header').forEach(h=>{
-h.onmousedown=function(e){dragItem=h.parentElement;offsetX=e.clientX-dragItem.offsetLeft;offsetY=e.clientY-dragItem.offsetTop;}
-});
-document.onmouseup=function(){dragItem=null;}
-document.onmousemove=function(e){if(dragItem){dragItem.style.left=(e.clientX-offsetX)+'px';dragItem.style.top=(e.clientY-offsetY)+'px';}}
-
-// Terminal Simulation
-const output=document.getElementById('output');
-document.getElementById('cmdInput').addEventListener('keydown',function(e){
-if(e.key==='Enter'){
-const cmd=this.value;
-if(cmd==='ls'){output.innerHTML+='<div>file1.txt  file2.py  folder1/</div>';}
-else if(cmd==='python'){output.innerHTML+='<div>Python 3.11.0 (simulated) ></div>';}
-else{output.innerHTML+=`<div>Command not found: ${cmd}</div>`;}
-output.scrollTop=output.scrollHeight; this.value='';}
-});
-</script>
+<script src="script.js"></script>
 </body>
 </html>
